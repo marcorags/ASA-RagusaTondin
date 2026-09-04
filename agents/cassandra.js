@@ -42,8 +42,6 @@ let committed = null;
 
 console.log(`[start] "Cassandra" profile=${params.profile} | delivery=${world.deliveryTiles.length} capacity=${world.capacity} decayMs=${params.decayMs} obs=${params.obs} margin=${params.reconsiderMargin}`);
 
-// Timed BDI control loop. Each iteration re-deliberates on fresh beliefs and
-// performs one action; when there is nothing to do it sleeps one tick.
 while (true) {
   beliefs.revise();
   const options = generateOptions(beliefs, world, params);

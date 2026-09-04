@@ -3,27 +3,6 @@ import { createTools } from '../llm/tools.js';
 import { ReactInterpreter, parseJsonAnswer } from '../llm/interpreter.js';
 import { missionSystem, normalizeMissionKind } from '../llm/prompts.js';
 
-/**
- * VALIDATION — the MISSION SUITE, in two parts:
- *
- *  A) the MODEL GRID: every mission type of the challenge, plus the
- *     bare-answer contract, run against each model given on the command line,
- *     reporting success, latency and token cost. This is how the default model
- *     was chosen — not by reputation or parameter count, but by measuring
- *     which one interprets these specific missions correctly and fast enough
- *     to be useful inside a real-time game;
- *  B) the ADVERSARIAL battery: prompt injection, attempted exfiltration,
- *     distraction and contradiction, since every mission arrives through a
- *     chat channel any player can write to.
- *
- * Outcomes are graded AFTER the same normalization the runtime applies (schema
- * and text rescue, negative-goto reinterpreted as avoidance), because what
- * matters is what the agent would DO, not the raw label the model emitted. The
- * red-light rule is graded "covered-by-reflex" when mislabeled: the runtime
- * arms it from the text pattern regardless of what the model decided.
- *
- * Usage: node validation/mission-suite.js [model ...]
- */
 const models = process.argv.slice(2);
 if (models.length === 0) models.push('google/gemma-3-27b-it');
 
@@ -31,7 +10,6 @@ const tools = createTools({
   getState: () => JSON.stringify({ me: { x: 5, y: 5 }, score: 100, carrying: 0, map: { width: 40, height: 40 }, visibleParcels: [], deliveryTiles: [{ x: 1, y: 1 }], activeDirectives: 'none' }),
 });
 
-/** Replicates the runtime rescue chain (index.js) on a parsed spec. */
 function normalize(/** @type {any} */ raw, /** @type {string} */ text) {
   if (!raw || typeof raw !== 'object') return { kind: 'unparsable' };
   const spec = { ...raw, kind: normalizeMissionKind(raw.kind) };
@@ -82,7 +60,7 @@ async function run(model, cases, label) {
     try {
       const r = await it.run(`Message received:\n<<<${c.text}>>>`);
       spec = normalize(parseJsonAnswer(r.answer), c.text);
-    } catch { /* graded as unparsable */ }
+    } catch {}
     const ms = Date.now() - t0;
     const pass = c.ok(spec);
     rows.push({ name: c.name, pass, kind: spec.kind, ms, tok: llm.usage.completion, note: !pass && c.note ? c.note : '' });

@@ -1,14 +1,4 @@
 /**
- * Strategy layer: named profiles + orthogonal feature flags + a router that
- * tunes the runtime parameters from the game config.
- *
- * The profiles (ECO / BALANCED / RICH) trade accuracy for cost: each one is a
- * preset of the same four levers (memory, aging, opponent prediction,
- * batching) plus a reconsideration margin. Every lever is also settable on its
- * own from the environment, which is what makes controlled ablations possible:
- * run the same agent twice with one lever flipped and the difference is
- * attributable. The router then adjusts for what the map actually looks like.
- *
  * @typedef {{
  *   profile: string,
  *   memory: boolean, aging: boolean, opponentPrediction: boolean, batching: boolean,
@@ -66,7 +56,6 @@ export function resolveStrategy(config) {
     decayMs, obs, moveMs,
   };
 
-  // Router: tune from the map/config.
   const w = game?.map?.width ?? 20;
   const h = game?.map?.height ?? 20;
   if (Math.max(w, h) >= 35 && obs <= 5) p.reconsiderMargin += 0.05; // big map + short sight → steadier commitment

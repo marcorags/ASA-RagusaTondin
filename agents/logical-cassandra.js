@@ -5,33 +5,7 @@ import { generateOptions, reviseIntention, clearlyBetter } from '../bdi/delibera
 import { stepToward } from '../bdi/plans.js';
 import { planRoute } from '../bdi/pddl.js';
 
-/**
- * AGENT A + PDDL — "Logical_Cassandra".
- *
- * Cassandra extended with automated planning. It shares the entire BDI core
- * with her — same beliefs, same deliberation, same executor — and differs in
- * exactly one place: WHERE the plan comes from. That is deliberate. Keeping
- * the two agents separate rather than merging them is what makes the effect of
- * the planner measurable: run both on the same scenario and the difference is
- * attributable to the planner alone.
- *
- * When a cluster of nearby parcels is worth optimising, the agent activates a
- * "collect-and-deliver" intention and CALLS THE PLANNER to obtain the plan to
- * execute. The planner returns a tile-level sequence of move/pickup/putdown
- * over a bounded subgrid (see pddl.js) and the loop executes it step by step.
- *
- * The interesting question is not whether PDDL can express the task, but where
- * a symbolic planner EARNS its latency inside a real-time loop. Greedy
- * deliberation is already near-optimal for "which single parcel next"; it is
- * ORDERING several pickups against one delivery trip that it gets wrong, and
- * that is exactly the sub-problem handed to the solver.
- *
- * Everything degrades: no worthwhile cluster, a slow solver, or no solver at
- * all, and the agent falls back to Cassandra's greedy behaviour with a
- * cooldown. It plays worse, it never stops playing.
- *
- * @typedef {import('../bdi/pddl.js').Step} Step
- */
+/** @typedef {import('../bdi/pddl.js').Step} Step */
 
 const world = await connectWorld('Logical_Cassandra');
 const params = resolveStrategy(world.config);
@@ -60,7 +34,6 @@ async function execStep(step) {
     }
     return true;
   }
-  // putdown
   const dropped = await world.client.emitPutdown();
   if (dropped && dropped.length) {
     beliefs.onDeliver();
@@ -119,7 +92,6 @@ function planStillWorthwhile() {
 while (true) {
   beliefs.revise();
 
-  // 1. Follow the current PDDL plan, if any — reviewing it as we go.
   if (plan.length) {
     const stale = Date.now() > planDeadline;
     if (stale || ++stepsSinceReview >= PLAN_REVIEW_EVERY) {
@@ -137,7 +109,6 @@ while (true) {
     continue;
   }
 
-  // 2. Try to get a PDDL collect-and-deliver plan for a nearby cluster.
   if (Date.now() >= cooldownUntil) {
     const r = await planRoute(world, beliefs, params);
     if (r.status === 'ok' && r.steps.length) {
@@ -154,8 +125,6 @@ while (true) {
     }
   }
 
-  // 3. Fallback: one greedy utility-based step (Cassandra), with persistent
-  //    commitment (margin δ) so the fallback does not oscillate.
   const options = generateOptions(beliefs, world, params);
   greedyCommitted = reviseIntention(greedyCommitted, options, params);
   const acted = await stepToward(world, beliefs, greedyCommitted);

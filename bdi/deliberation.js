@@ -1,9 +1,4 @@
 /**
- * Deliberation: option generation → utility ranking → cautious intention
- * revision. This is the BDI `options` / `filter` pair made concrete — desires
- * are generated from the current beliefs, scored by expected NET gain, and the
- * committed intention is only abandoned when a rival option beats it clearly.
- *
  * @typedef {import('../core/world.js').World} World
  * @typedef {import('./strategy.js').Params} Params
  * @typedef {import('./beliefs.js').BeliefStore} BeliefStore
@@ -36,8 +31,6 @@ export function generateOptions(beliefs, world, params) {
   /** @type {Option[]} */
   const options = [];
 
-  // --- Pickups (only if we still have capacity; with batching OFF, only
-  // while empty-handed: pick one → deliver one, the ablation baseline) ---
   if (beliefs.carryingCount < world.capacity && (params.batching || beliefs.carryingCount === 0)) {
     const rivals = params.opponentPrediction ? beliefs.agentList() : [];
     const dDeliv = deliv.length ? nearest(from, deliv) : 0;
@@ -70,14 +63,11 @@ export function generateOptions(beliefs, world, params) {
     }
   }
 
-  // --- Deliver: the fallback, taken when no pickup is worth the detour. Its
-  // baseline rises slightly with the load so a big cargo gets secured sooner. ---
   if (beliefs.carryingCount > 0 && deliv.length) {
     const u = 1 + params.distTiebreak * beliefs.carryingCount;
     options.push({ key: 'deliver', type: 'go_deliver', target: deliv[0], u });
   }
 
-  // --- Explore (baseline tiny utility: chosen only when nothing better) ---
   const exp = beliefs.exploreTarget();
   if (exp) options.push({ key: 'explore', type: 'explore', target: exp, u: 0.001 });
 

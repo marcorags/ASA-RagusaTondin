@@ -43,7 +43,6 @@ function makeBus() {
 
 process.env.TEAM_SECRET = 'test-secret';
 
-// --- Handshake ---------------------------------------------------------------
 {
   const bus = makeBus();
   const a = new TeamProtocol(bus('aaa'), { name: 'A' });
@@ -62,7 +61,6 @@ process.env.TEAM_SECRET = 'test-secret';
   check('impostor with wrong secret NOT paired', a.teammateId === null, `a→${a.teammateId}`);
 }
 
-// --- Claims -------------------------------------------------------------------
 {
   const bus = makeBus();
   const a = new TeamProtocol(bus('aaa'), { name: 'A' });
