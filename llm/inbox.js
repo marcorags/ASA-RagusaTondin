@@ -1,24 +1,3 @@
-/**
- * Mission Inbox — the agent's LINGUISTIC PERCEPTION front door. One `onMsg`
- * listener that sorts incoming chat by sender and by type, then a SERIALIZED
- * queue toward the interpreter.
- *
- * It exists because wiring an LLM straight onto the chat callback leaves two
- * holes open:
- *
- *  - with no sender or type filter, ANYONE in the game can command the agent.
- *    Here: our own echoes are dropped; structured objects are team traffic and
- *    never missions; asks are never routed through the LLM at all, because the
- *    server's reply window is a hard 1 second and no model answers in time;
- *  - firing a fresh interpretation per message races on shared state. Here a
- *    single worker drains the queue one interpretation at a time.
- *
- * There is also a cheap piece of metareasoning at the gate: duplicate texts
- * from the same sender within a cooldown are dropped WITHOUT spending an LLM
- * call, because mission agents re-shout the same prompt periodically. The
- * cheapest inference is the one you decide not to run.
- */
-
 const DEDUPE_MS = 20000;
 
 export class MissionInbox {

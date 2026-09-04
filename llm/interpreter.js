@@ -1,31 +1,6 @@
 import { solverSystem, forModel } from './prompts.js';
 
 /**
- * ReAct interpreter — the LLM-PLANNER of the agent: it turns an objective
- * expressed in natural language into a structured, validated specification the
- * rest of the system can act on. A textual Thought / Action / Action Input /
- * Observation loop, with the defensive runtime checks a text protocol needs,
- * because the model's output is a PROPOSAL and is never trusted:
- *
- *  - anchored regexes (one directive per line, Final Answer multiline);
- *  - if a turn contains BOTH an Action and a Final Answer, the Action wins
- *    and the premature answer is discarded — the model has not finished
- *    gathering evidence, so its conclusion is not yet worth anything;
- *  - if a turn contains N Actions, only the FIRST is executed and the model
- *    is told so via the observation;
- *  - invalid format → the error is re-fed as an observation, so the model
- *    self-corrects instead of the whole run being thrown away;
- *  - hard `maxIterations`: exhausted → `answer: null` and the CALLER decides
- *    the fallback (our rule: ignore the mission, keep playing);
- *  - per-run SCRATCHPAD: the Thought/Action/Observation chain lives in a
- *    local message array, so the caller's own memory stays clean.
- *
- * The full trace is returned (and optionally logged live with `verbose`): it
- * is what makes the reasoning inspectable during a demo, and what the
- * verbose-vs-minimal token comparison is measured on.
- */
-
-/**
  * Parse a Final Answer expected to be a JSON object. Models wrap JSON in
  * markdown fences no matter what the prompt says, so parsing has to be
  * defensive: strip fences, find the outermost braces, parse. Returns null on
@@ -47,9 +22,7 @@ export function parseJsonAnswer(text) {
 }
 
 const ACTION_RE = /^Action:\s*(.+)$/im;
-// Tolerant on the input line: models (measured on llama-3.3-70b) often write
-// "Input:" instead of "Action Input:" — rejecting that only sends them into
-// a misleading-feedback loop. Accept both; the strict form stays in prompts.
+// Accept the commonly emitted Input: alias to avoid retry loops.
 const ACTION_INPUT_RE = /^(?:Action\s+)?Input:\s*(.+)$/im;
 const FINAL_RE = /^Final Answer:\s*([\s\S]*)$/im;
 const ACTION_COUNT_RE = /^Action:/gim;
@@ -115,10 +88,7 @@ export class ReactInterpreter {
         return { answer: final[1].trim(), iterations: i + 1, trace: scratchpad };
       }
 
-      // Measured tolerance (qwen3): when asked for a JSON spec, the model may
-      // emit the bare JSON with no "Final Answer:" prefix — and repeat it
-      // verbatim on every format-error retry (8 wasted calls). A message that
-      // IS a well-formed JSON object is a final answer in all but prefix.
+      // Accept a bare JSON object as a final answer.
       if (parseJsonAnswer(text)) {
         return { answer: text.trim(), iterations: i + 1, trace: scratchpad };
       }

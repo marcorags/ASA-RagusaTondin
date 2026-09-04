@@ -16,19 +16,15 @@ function check(name, ok, detail = '') {
 
 const params = /** @type {any} */ ({ moveMs: 100, obs: 5, decayMs: 1000, memory: true, opponentPrediction: false });
 
-// --- ConveniencePolicy -------------------------------------------------------
 {
-  // Cold start (no evidence): prudent default rate = 1 pt/s.
   const p = new ConveniencePolicy(params);
   check('cold-start rate = 1', p.earningRate() === 1, String(p.earningRate()));
 
-  // 1000 pts for a 15-step walk: obviously worth it.
   check('big bonus adopted', p.evaluate(1000, 15).adopt === true, JSON.stringify(p.evaluate(1000, 15)));
   // 5 pts for a 40-step walk (10s → ~10 pts of farming): not worth it.
   check('small far bonus ignored', p.evaluate(5, 40).adopt === false, JSON.stringify(p.evaluate(5, 40)));
   // Unknown reward: prudent zero → never beats a positive cost.
   check('unknown reward ignored', p.evaluate(null, 3).adopt === false, JSON.stringify(p.evaluate(null, 3)));
-  // Negative reward: never adopted as a goal.
   check('negative reward ignored', p.evaluate(-1000, 2).adopt === false, JSON.stringify(p.evaluate(-1000, 2)));
 }
 {
@@ -43,7 +39,6 @@ const params = /** @type {any} */ ({ moveMs: 100, obs: 5, decayMs: 1000, memory:
   check('rich map: near medium bonus adopted', p.evaluate(30, 5).adopt === true, JSON.stringify(p.evaluate(30, 5)));
 }
 
-// --- Directives → blockedCells ----------------------------------------------
 {
   const world = /** @type {any} */ ({ spawnerTiles: [], me: {}, myTile: () => ({ x: 0, y: 0 }), getParcels: () => [], getCrates: () => [], getAgents: () => [] });
   const d = new Directives();
@@ -54,7 +49,6 @@ const params = /** @type {any} */ ({ moveMs: 100, obs: 5, decayMs: 1000, memory:
   check('forbidden tiles become blocked cells', cells.has('13_15') && cells.has('14_15') && cells.size === 2, [...cells].join(' '));
 }
 
-// --- applyDirectives (L2 behavioural rules) ----------------------------------
 {
   const world = /** @type {any} */ ({
     myTile: () => ({ x: 0, y: 0 }),
@@ -71,7 +65,6 @@ const params = /** @type {any} */ ({ moveMs: 100, obs: 5, decayMs: 1000, memory:
   const deliver = /** @type {any} */ ({ key: 'deliver', type: 'go_deliver', target: { x: 5, y: 0 }, u: 1 });
   const explore = /** @type {any} */ ({ key: 'explore', type: 'explore', target: { x: 3, y: 3 }, u: 0.001 });
 
-  // batchSize: below B → pickups only; at B → deliver only.
   const d1 = new Directives(); d1.batchSize = 3;
   let out = applyDirectives([pick('a', 5), deliver, explore], mkBeliefs(2, 40), d1, world);
   check('batch: below B → no deliver', !out.some((o) => o.type === 'go_deliver') && out.some((o) => o.type === 'go_pick_up'), JSON.stringify(out.map((o) => o.key)));

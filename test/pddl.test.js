@@ -14,7 +14,6 @@ function check(name, ok, detail = '') {
   if (ok) pass++; else fail++;
 }
 
-// Tiny 3x3 open grid, zone = two tiles.
 const keys = new Set();
 for (let x = 0; x < 3; x++) for (let y = 0; y < 3; y++) keys.add(`${x}_${y}`);
 const canMove = () => true;

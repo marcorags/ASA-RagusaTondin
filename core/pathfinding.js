@@ -113,10 +113,6 @@ export function bfsToNearest(from, targets, canMove) {
   return rebuildPath(prev, bestKey);
 }
 
-// ---------------------------------------------------------------------------
-// A* — informed search
-// ---------------------------------------------------------------------------
-
 /**
  * Tiny binary min-heap ordered by `f`, used as A*'s open set (priority queue).
  * @typedef {{ x:number, y:number, f:number }} HeapNode

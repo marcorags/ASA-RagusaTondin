@@ -61,7 +61,6 @@ export class BeliefStore {
     const now = Date.now();
     const here = this.world.myTile();
 
-    // --- Parcels ---
     const sensed = this.world.getParcels();
     const sensedIds = new Set(sensed.map((p) => p.id));
     for (const p of sensed) {
@@ -76,7 +75,6 @@ export class BeliefStore {
       }
     }
 
-    // --- Agents + inferred direction ---
     const sensedAgents = this.world.getAgents().filter((a) => typeof a.x === 'number' && typeof a.y === 'number');
     const seenAgents = new Set(sensedAgents.map((a) => a.id));
     for (const a of sensedAgents) {
@@ -88,7 +86,6 @@ export class BeliefStore {
       if (!seenAgents.has(id) && now - ab.seenAt > 3000) this.agents.delete(id); // forget stale
     }
 
-    // --- Crates: remember; prune ones we should see but no longer do ---
     const sensedCrateKeys = new Set(this.world.getCrates().map((c) => `${Math.round(c.x)}_${Math.round(c.y)}`));
     for (const c of this.world.getCrates()) this.crates.set(`${Math.round(c.x)}_${Math.round(c.y)}`, { x: Math.round(c.x), y: Math.round(c.y) });
     for (const key of [...this.crates.keys()]) {
@@ -96,7 +93,6 @@ export class BeliefStore {
       if (!sensedCrateKeys.has(key) && manhattan(here, { x, y }) < this.p.obs) this.crates.delete(key);
     }
 
-    // --- Exploration bookkeeping: mark spawners currently in view ---
     for (const s of this.world.spawnerTiles) {
       if (manhattan(here, s) < this.p.obs) this.spawnerSeen.set(`${s.x}_${s.y}`, now);
     }
