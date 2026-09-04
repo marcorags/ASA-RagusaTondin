@@ -20,7 +20,18 @@ difference is attributable to the planner alone.
 
 ## Architecture
 
-```
+The four executable configurations share a common implementation substrate while
+adding specialized BDI, PDDL, LLM, and coordination capabilities.
+
+![Overall HANDOFF system architecture](assets/figure1-system-architecture.png)
+
+*Overall system architecture. Cassandra provides the baseline BDI controller;
+Logical_Cassandra adds selective PDDL planning, while Loqua and Cassandra_T form
+the coordinated LLM–BDI configuration.*
+
+The repository mirrors this separation:
+
+```text
 core/       infrastructure: game connection, world model, pathfinding, team protocol
 bdi/        the BDI layer: beliefs, deliberation, plans, strategy, directives, PDDL
 llm/        the LLM layer: provider client, prompts, ReAct interpreter, tools,
@@ -29,10 +40,42 @@ agents/     the four entry points
 test/       deterministic test suites (no network, no game server)
 validation/ live validation tools (require the game and/or an LLM provider)
 ```
+The repository follows a layered design in which the executable agents compose
+functionality from the LLM, BDI, and core modules. The central design idea is that
+Loqua is not a separate control architecture: it retains a deterministic BDI body
+and adds a language-based mission interpretation layer on top.
 
-Dependencies run one way only — `agents → llm → bdi → core` — which mirrors the
-central design idea: the LLM agent is not a separate kind of agent, it is a BDI body
-with a language head on top.
+## Cassandra BDI Control Loop
+
+Cassandra follows an incremental BDI-style control loop: percepts update the world
+snapshot, beliefs are revised, behavioural options are generated and ranked, and
+intention revision determines whether the current commitment should be preserved or
+replaced. Execution then attempts at most one primitive action before the next
+belief-revision cycle.
+
+![Cassandra BDI control loop](assets/figure2-bdi-control-loop.png)
+
+*Cassandra's BDI control loop. The high-level intention persists across iterations,
+while A* routes are recomputed when movement is required and discarded after selecting
+the next step.*
+
+## Multi-Agent Coordination
+
+Loqua and Cassandra_T operate as independent agents with separate local beliefs and
+control loops, while exchanging structured messages through the `TeamProtocol`.
+Coordination changes goals, constraints, and priorities without transferring direct
+control of primitive actions between agents.
+
+The cooperative handoff mission uses fixed roles: Cassandra_T collects and drops
+parcels at a selected handoff tile, while Loqua retrieves them through the environment
+and completes the delivery.
+
+![Cooperative handoff sequence](assets/figure3-cooperative-handoff.png)
+
+*Cooperative handoff between Loqua and Cassandra_T. Loqua assigns the handoff task,
+Cassandra_T autonomously collects and drops the parcels, and Loqua retrieves and
+delivers them. The `pendingHandoffTransfer` state prevents Cassandra_T from immediately
+re-picking parcels at the handoff tile.*
 
 ## Setup
 
