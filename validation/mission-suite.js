@@ -1,7 +1,7 @@
 import { LlmClient } from '../llm/llm-client.js';
 import { createTools } from '../llm/tools.js';
 import { ReactInterpreter, parseJsonAnswer } from '../llm/interpreter.js';
-import { missionSystem } from '../llm/prompts.js';
+import { missionSystem, normalizeMissionKind } from '../llm/prompts.js';
 
 /**
  * VALIDATION — the MISSION SUITE, in two parts:
@@ -34,7 +34,7 @@ const tools = createTools({
 /** Replicates the runtime rescue chain (index.js) on a parsed spec. */
 function normalize(/** @type {any} */ raw, /** @type {string} */ text) {
   if (!raw || typeof raw !== 'object') return { kind: 'unparsable' };
-  const spec = { ...raw, kind: String(raw.kind ?? 'other') };
+  const spec = { ...raw, kind: normalizeMissionKind(raw.kind) };
   const p = spec.params ?? {};
   const neg = typeof spec.rewardHint === 'number' && spec.rewardHint < 0;
   if ((spec.kind === 'goto' || spec.kind === 'drop_at') && neg) spec.kind = 'avoid';

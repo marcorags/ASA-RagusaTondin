@@ -1,6 +1,7 @@
 import { ReactInterpreter } from '../llm/interpreter.js';
 import { createTools, calculate } from '../llm/tools.js';
 import { LlmClient } from '../llm/llm-client.js';
+import { normalizeMissionKind } from '../llm/prompts.js';
 
 /**
  * Interpreter test suite, in two halves.
@@ -39,6 +40,11 @@ function mockLlm(/** @type {string[]} */ outputs) {
 // ---------------------------------------------------------------------------
 console.log('--- A) interpreter guards (mock model) ---');
 const tools = createTools({ getState: () => '{"x":1,"y":2}' });
+
+check('meet_at kind accepted directly', normalizeMissionKind('meet_at') === 'meet_at');
+check('handoff kind accepted directly', normalizeMissionKind('handoff') === 'handoff');
+check('stop_go kind accepted directly', normalizeMissionKind('stop_go') === 'stop_go');
+check('unsupported kind becomes other', normalizeMissionKind('unsupported_kind') === 'other');
 
 {
   // Happy path: Action → Observation → Final Answer.

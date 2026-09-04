@@ -6,7 +6,7 @@ import { stepToward } from '../bdi/plans.js';
 import { LlmClient } from '../llm/llm-client.js';
 import { createTools } from '../llm/tools.js';
 import { ReactInterpreter, parseJsonAnswer } from '../llm/interpreter.js';
-import { missionSystem, PROMPT_VERSION } from '../llm/prompts.js';
+import { missionSystem, normalizeMissionKind, PROMPT_VERSION } from '../llm/prompts.js';
 import { MissionInbox } from '../llm/inbox.js';
 import { ConveniencePolicy } from '../llm/policy.js';
 import { Directives, DirectiveAwareBeliefs, applyDirectives } from '../bdi/directives.js';
@@ -85,7 +85,7 @@ const interpreter = new ReactInterpreter(llm, tools, {
  */
 function validateSpec(raw) {
   if (!raw || typeof raw !== 'object') return null;
-  const kind = ['goto', 'drop_at', 'answer', 'avoid', 'deliver_exactly', 'deliver_value_max', 'other'].includes(raw.kind) ? raw.kind : 'other';
+  const kind = normalizeMissionKind(raw.kind);
   /** @param {any} c */
   const inMap = (c) => Number.isInteger(c?.x) && Number.isInteger(c?.y)
     && c.x >= 0 && c.y >= 0 && c.x < world.worldMap.width && c.y < world.worldMap.height;

@@ -49,6 +49,15 @@
  *      rescue in the agent covers the parameterized kinds as a second net.
  */
 
+export const MISSION_KINDS = new Set([
+  'goto', 'drop_at', 'answer', 'avoid',
+  'deliver_exactly', 'deliver_value_max',
+  'meet_at', 'handoff', 'stop_go', 'other',
+]);
+
+export const normalizeMissionKind = (kind) =>
+  MISSION_KINDS.has(kind) ? kind : 'other';
+
 export const PROMPT_VERSION = 'v7';
 
 /**
