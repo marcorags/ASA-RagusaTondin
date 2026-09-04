@@ -1,0 +1,29 @@
+# Credentials
+.env
+.env.*
+!.env.example
+
+# Dependencies / npm
+node_modules/
+npm-debug.log*
+
+# Generated validation
+validation/**/generated/
+validation/**/runs/
+validation/**/diagnostics/
+validation/**/diagnostics_*/
+validation/**/instrumented_diagnostic/
+validation/**/preflight_*/
+validation/**/environment-preflight.json
+validation/**/.challenge*-processes.json
+validation/challenge2/results_*/
+
+# Logs / local processes
+*.log
+*.pid
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

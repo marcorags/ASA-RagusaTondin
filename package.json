@@ -1,0 +1,35 @@
+{
+  "name": "asa-deliveroo-agents",
+  "version": "1.0.0",
+  "description": "Autonomous agents for the Deliveroo.js game (UniTN - Autonomous Software Agents project).",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "cassandra": "node agents/cassandra.js",
+    "logical-cassandra": "node agents/logical-cassandra.js",
+    "cassandra-team": "node agents/cassandra-team.js",
+    "loqua": "node agents/loqua.js",
+    "typecheck": "tsc -p jsconfig.json",
+    "test": "node test/interpreter.test.js && node test/policy.test.js && node test/team.test.js && node test/pddl.test.js",
+    "test:interpreter": "node test/interpreter.test.js",
+    "test:policy": "node test/policy.test.js",
+    "test:team": "node test/team.test.js",
+    "test:pddl": "node test/pddl.test.js",
+    "mission-suite": "node validation/mission-suite.js",
+    "meet-mission": "node validation/meet-mission.js",
+    "impostor": "node validation/impostor.js"
+  },
+  "dependencies": {
+    "@unitn-asa/deliveroo-js-sdk": "^1.3.10",
+    "@unitn-asa/pddl-client": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "openai": "^6.37.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.3.0",
+    "typescript": "^7.0.2"
+  }
+}
